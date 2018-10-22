@@ -20,8 +20,12 @@
         <fieldset>
             <legend>Settings</legend>
             <p>
-                <input type="radio" name="indexed" value="0-indexed" checked="checked">0-indexed
-                <input type="radio" name="indexed">1-indexed
+                <input type="radio" name="indexing" value="0-indexed" checked="checked">0-indexed
+                <input type="radio" name="indexing" value="1-indexed">1-indexed
+            </p>
+            <p>
+                <input type="radio" name="direction" value="undirected" checked="checked">undirected
+                <input type="radio" name="direction" value="directed">directed
             </p>
             <p>vertex radius : <input id="vertexRadiusInput" type="number"></p>
             <p>edge length : <input id="edgeLengthInput" type="number"></p>
