@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Graph visualization test</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" media="screen" href="main.css" />
+    <style>
+        fieldset {
+            vertical-align: top;
+            display: inline-block;
+        }
+    </style>
+</head>
+
+<body>
+    <div>
+        <fieldset>
+            <legend>Settings</legend>
+            <p>
+                <input type="radio" name="indexed" value="0-indexed" checked="checked">0-indexed
+                <input type="radio" name="indexed">1-indexed
+            </p>
+            <p>vertex radius : <input id="vertexRadiusInput" type="number"></p>
+            <p>edge length : <input id="edgeLengthInput" type="number"></p>
+        </fieldset>
+        <fieldset>
+            <legend>Adjacency List</legend>
+            <textarea id="adjacencylist" cols="10" rows="10"></textarea>
+        </fieldset>
+        <fieldset>
+            <legend>Adjacency Matrix</legend>
+            <textarea id="adjacencymat" cols="10" rows="10"></textarea>
+        </fieldset>
+    </div>
+    <hr>
+    <div>
+        <canvas id="canvas"></canvas>
+        <script src="graph-vis.js"></script>
+    </div>
+</body>
+
+</html>
