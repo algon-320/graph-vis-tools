@@ -6,11 +6,14 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>Graph visualization test</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" type="text/css" media="screen" href="main.css" />
     <style>
         fieldset {
             vertical-align: top;
             display: inline-block;
+        }
+        canvas {
+            border: 2px;
+            border-style: dashed;
         }
     </style>
 </head>
@@ -20,15 +23,16 @@
         <fieldset>
             <legend>Settings</legend>
             <p>
-                <input type="radio" name="indexing" value="0-indexed" checked="checked">0-indexed
-                <input type="radio" name="indexing" value="1-indexed">1-indexed
+                <input type="radio" id="radioZeroIndexed" name="indexing">0-indexed
+                <input type="radio" id="radioOneIndexed" name="indexing">1-indexed
             </p>
             <p>
-                <input type="radio" name="direction" value="undirected" checked="checked">undirected
-                <input type="radio" name="direction" value="directed">directed
+                <input type="radio" id="radioUndirected" value="undirected" name="direction">undirected
+                <input type="radio" id="radioDirected" value="directed" name="direction">directed
             </p>
             <p>vertex radius : <input id="vertexRadiusInput" type="number"></p>
             <p>edge length : <input id="edgeLengthInput" type="number"></p>
+            <p>gravity : <input type="checkbox" id="checkboxGravity"></p>
         </fieldset>
         <fieldset>
             <legend>Adjacency List</legend>
