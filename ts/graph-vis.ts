@@ -4,10 +4,10 @@ canvas.width = 1800;
 canvas.height = 1000;
 ctx.font = "bold 16px 'monospace'";
 
-const adjList = <HTMLTextAreaElement>document.getElementById("adjacencylist");
-const adjMat = <HTMLTextAreaElement>document.getElementById("adjacencymat");
-const vertexRadiusInput = <HTMLInputElement>document.getElementById("vertexRadiusInput");
-const edgeLengthInput = <HTMLInputElement>document.getElementById("edgeLengthInput");
+const inputAdjList = <HTMLTextAreaElement>document.getElementById("inputAdjList");
+const inputAdjMat = <HTMLTextAreaElement>document.getElementById("inputAdjMat");
+const inputVertexRadius = <HTMLInputElement>document.getElementById("inputVertexRadius");
+const inputEdgeLength = <HTMLInputElement>document.getElementById("inputEdgeLength");
 const radioZeroIndexed = <HTMLInputElement>document.getElementById("radioZeroIndexed");
 const radioOneIndexed = <HTMLInputElement>document.getElementById("radioOneIndexed");
 const radioUndirected = <HTMLInputElement>document.getElementById("radioUndirected");
@@ -71,7 +71,7 @@ class Vertex {
 }
 
 let vertexIndexing = VertexIndexing.zero;
-let edgeDirection = EdgeDirection.undirected;
+let edgeDirection = EdgeDirection.directed;
 let vertexRadius = 20;
 let edgeLength = 100;
 let enableGravity = false;
@@ -202,8 +202,8 @@ function updateUI(): void {
             break;
     }
 
-    vertexRadiusInput.value = vertexRadius.toString();
-    edgeLengthInput.value = edgeLength.toString();
+    inputVertexRadius.value = vertexRadius.toString();
+    inputEdgeLength.value = edgeLength.toString();
 
     checkboxGravity.checked = enableGravity;
 
@@ -217,7 +217,7 @@ function updateUI(): void {
             }
         }
     }
-    adjList.value = valueAL;
+    inputAdjList.value = valueAL;
 
     let valueAM = "";
     for (let i = 0; i < numVertex; i++) {
@@ -229,7 +229,7 @@ function updateUI(): void {
         }
         valueAM += row;
     }
-    adjMat.value = valueAM;
+    inputAdjMat.value = valueAM;
 }
 
 let sumEnergy = 0;
@@ -365,15 +365,15 @@ radioUndirected.addEventListener("change", getRadioButtonEdgeDirection, false);
 radioDirected.addEventListener("change", getRadioButtonEdgeDirection, false);
 
 function getInputVertexRadius(): void {
-    vertexRadius = parseInt(vertexRadiusInput.value);
+    vertexRadius = parseInt(inputVertexRadius.value);
     update();
 }
 function getInputEdgeLength(): void {
-    edgeLength = parseInt(edgeLengthInput.value);
+    edgeLength = parseInt(inputEdgeLength.value);
     update();
 }
-vertexRadiusInput.addEventListener("change", getInputVertexRadius, false);
-edgeLengthInput.addEventListener("change", getInputEdgeLength, false);
+inputVertexRadius.addEventListener("change", getInputVertexRadius, false);
+inputEdgeLength.addEventListener("change", getInputEdgeLength, false);
 
 function getCheckboxGravity() {
     enableGravity = checkboxGravity.checked;
@@ -383,7 +383,7 @@ checkboxGravity.addEventListener("input", getCheckboxGravity, false);
 
 function getTextareaAdjList(): void {
     let mxID = -1;
-    let lines = adjList.value.split(/\r\n|\r|\n/);
+    let lines = inputAdjList.value.split(/\r\n|\r|\n/);
     let tmp: Array<[number, number]> = [];
     for (let i = 0; i < lines.length; i++) {
         if (lines[i] === "") continue;
@@ -417,7 +417,7 @@ function getTextareaAdjList(): void {
 }
 function getTextareaAdjMat(): void {
     let invalid = false;
-    let lines = adjMat.value.split(/\r\n|\r|\n/);
+    let lines = inputAdjMat.value.split(/\r\n|\r|\n/);
     let cols = -1;
     let mat: Array<Array<number>> = [];
     for (let i = 0; i < lines.length; i++) {
@@ -446,8 +446,8 @@ function getTextareaAdjMat(): void {
     }
     update();
 }
-adjList.addEventListener("change", getTextareaAdjList, false);
-adjMat.addEventListener("change", getTextareaAdjMat, false);
+inputAdjList.addEventListener("change", getTextareaAdjList, false);
+inputAdjMat.addEventListener("change", getTextareaAdjMat, false);
 
 demoInit();
 update();
