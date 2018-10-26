@@ -3,6 +3,7 @@ const ctx = <CanvasRenderingContext2D>canvas.getContext("2d");
 canvas.width = 1800;
 canvas.height = 1000;
 ctx.font = "bold 16px 'monospace'";
+ctx.textAlign = 'center';
 
 const inputAdjList = <HTMLTextAreaElement>document.getElementById("inputAdjList");
 const inputVertexRadius = <HTMLInputElement>document.getElementById("inputVertexRadius");
@@ -84,7 +85,7 @@ class Edge<Cost> {
 interface AdjacencyList<Cost> {
     [index: number]: { [index: number]: Edge<Cost> };
 }
-let adjList: AdjacencyList<number | null> = {};
+let adjList: AdjacencyList<string | null> = {};
 adjList[0] = { 1: new Edge(0, 1, null) };
 let clicked: number = -1;
 
@@ -113,6 +114,15 @@ function render(): void {
         for (let j = 0; j < numVertex; j++) {
             if (!existEdge(i, j)) continue;
             let vec = Vec.sub(vs[j].p, vs[i].p);
+
+            let cost = adjList[i][j].cost;
+            if (cost != null) {  // コストを描画
+                let center = Vec.add(vs[i].p, Vec.scalar(vec, 0.5));
+                let out = Vec.rotate(Vec.scalar(vec, 0.5), -Math.PI / 2);
+                let p = Vec.add(center, Vec.setLength(out, 15));
+                ctx.fillText(cost.toString(), p.x, p.y);
+            }
+
             let len = Vec.abs(vec) - vertexRadius;
             vec = Vec.setLength(vec, len);
             let pi = vs[i].p;
@@ -178,7 +188,7 @@ function render(): void {
         }
 
         ctx.fillStyle = fontColor;
-        ctx.fillText(i.toString(), vs[i].p.x - 4, vs[i].p.y + 5);
+        ctx.fillText(i.toString(), vs[i].p.x, vs[i].p.y + 5);
     }
 }
 
@@ -383,13 +393,13 @@ function getTextareaAdjList(): void {
         if (e.length < 2 || e[1] === "") continue;
 
         let a = parseInt(e[0]), b = parseInt(e[1]), c = null;
-        if (e.length >= 3) c = parseInt(e[2]);
+        if (e.length >= 3) c = e[2];
 
         mxID = Math.max(mxID, a, b);
         if (!(a in adjList)) adjList[a] = {};
         adjList[a][b] = new Edge(a, b, c);
         if (edgeDirection == EdgeDirection.undirected) {
-            if (!(a in adjList)) adjList[a] = {};
+            if (!(b in adjList)) adjList[b] = {};
             adjList[b][a] = new Edge(b, a, c);
         }
     }
