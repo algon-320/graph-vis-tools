@@ -7,19 +7,31 @@
     <title>Graph visualization test</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
+        html,body { height:100%; }
         fieldset {
             vertical-align: top;
             display: inline-block;
         }
+        #controller {
+            height: 320px;
+        }
         canvas {
-            border: 2px;
+            width: 100%;
+            height: 100%;
+            border: 1px;
             border-style: dashed;
+            position: center;
+        }
+        #wrapper {
+            height: 100%;
+            width: 100%;
+            padding: 0px;
         }
     </style>
 </head>
 
 <body>
-    <div>
+    <div id="controller">
         <fieldset>
             <legend>Settings</legend>
             <p>
@@ -40,10 +52,10 @@
         </fieldset>
     </div>
     <hr>
-    <div>
+    <div id="wrapper">
         <canvas id="canvas"></canvas>
-        <script src="graph-vis.js"></script>
     </div>
+    <script src="graph-vis.js"></script>
 </body>
 
 </html>

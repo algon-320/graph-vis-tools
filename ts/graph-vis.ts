@@ -1,9 +1,6 @@
+const canvasWrapper = <HTMLDivElement>document.getElementById("wrapper");
 const canvas: HTMLCanvasElement = <HTMLCanvasElement>document.getElementById("canvas");
 const ctx = <CanvasRenderingContext2D>canvas.getContext("2d");
-canvas.width = 1800;
-canvas.height = 1000;
-ctx.font = "bold 16px 'monospace'";
-ctx.textAlign = 'center';
 
 const inputAdjList = <HTMLTextAreaElement>document.getElementById("inputAdjList");
 const inputVertexRadius = <HTMLInputElement>document.getElementById("inputVertexRadius");
@@ -120,7 +117,7 @@ function render(): void {
                 let center = Vec.add(vs[i].p, Vec.scalar(vec, 0.5));
                 let out = Vec.rotate(Vec.scalar(vec, 0.5), -Math.PI / 2);
                 let p = Vec.add(center, Vec.setLength(out, 15));
-                ctx.fillText(cost.toString(), p.x, p.y);
+                ctx.fillText(cost.toString(), p.x, p.y + 5);
             }
 
             let len = Vec.abs(vec) - vertexRadius;
@@ -248,12 +245,12 @@ function update(): void {
 
     // 定数 ------------------------
     const coulombK = 1000;
-    const springK = 1;
+    const springK = 1.2;
     const energyLowerbound = 0.1;
-    const deltaT = 0.1;
-    const M = 1;
-    const decK = 0.95;
-    const G = 10;
+    const deltaT = 0.25;
+    const M = 2;
+    const decK = 0.7;
+    const G = 50;
     // -----------------------------
     function moveVertices(timestamp: DOMHighResTimeStamp): void {
         sumEnergy = 0;
@@ -262,7 +259,7 @@ function update(): void {
 
             let F = new Vec(0, 0);
 
-            // クーロン力
+            // 頂点からのクーロン力
             for (let j = 0; j < numVertex; j++) {
                 if (i == j) continue;
                 const v2 = vs[j];
@@ -273,7 +270,25 @@ function update(): void {
 
                 let f = vec;
                 f = Vec.scalar(f, absf / Vec.abs(f));  // 長さを設定
+                // if (Vec.abs(f) < 5) continue;
                 F = Vec.add(F, f);
+            }
+            // 枠からのクーロン力
+            {
+                const K = coulombK;
+                let sum = new Vec(0, 0);
+                let f = new Vec(0, K / Math.max(v1.p.y - 0, 1));
+                sum = Vec.add(sum, f);
+
+                f = new Vec(0, -(K / Math.max(canvas.height - v1.p.y, 1)));
+                sum = Vec.add(sum, f);
+
+                f = new Vec(K / Math.max(v1.p.x - 0, 1), 0);
+                sum = Vec.add(sum, f);
+
+                f = new Vec(-(K / Math.max(canvas.width - v1.p.x, 1)), 0);
+                sum = Vec.add(sum, f);
+                F = Vec.add(F, sum);
             }
 
             // フックの法則
@@ -413,4 +428,12 @@ function getTextareaAdjList(): void {
 inputAdjList.addEventListener("change", getTextareaAdjList, false);
 
 demoInit();
-update();
+function setCanvasSize() {
+    canvas.width = canvas.clientWidth;
+    canvas.height = canvas.clientHeight;
+    ctx.textAlign = 'center';
+    ctx.font = "bold 16px 'monospace'";
+    update();
+}
+setCanvasSize();
+window.addEventListener("resize", setCanvasSize, false);
