@@ -5,7 +5,6 @@ canvas.height = 1000;
 ctx.font = "bold 16px 'monospace'";
 
 const inputAdjList = <HTMLTextAreaElement>document.getElementById("inputAdjList");
-const inputAdjMat = <HTMLTextAreaElement>document.getElementById("inputAdjMat");
 const inputVertexRadius = <HTMLInputElement>document.getElementById("inputVertexRadius");
 const inputEdgeLength = <HTMLInputElement>document.getElementById("inputEdgeLength");
 const radioZeroIndexed = <HTMLInputElement>document.getElementById("radioZeroIndexed");
@@ -76,17 +75,25 @@ let vertexRadius = 20;
 let edgeLength = 100;
 let enableGravity = false;
 
-let numVertex = 6;
+let numVertex = 2;
 let vs: Array<Vertex> = [];
-let edge: Array<Array<number>> = [
-    [0, 1, 0, 0, 1, 0],
-    [1, 0, 1, 0, 1, 0],
-    [0, 1, 0, 1, 0, 0],
-    [0, 0, 1, 0, 1, 1],
-    [1, 1, 0, 1, 0, 0],
-    [0, 0, 0, 1, 0, 0],
-];
+
+class Edge<Cost> {
+    constructor(public from: number, public to: number, public cost: Cost) { }
+}
+interface AdjacencyList<Cost> {
+    [index: number]: { [index: number]: Edge<Cost> };
+}
+let adjList: AdjacencyList<number | null> = {};
+adjList[0] = { 1: new Edge(0, 1, null) };
 let clicked: number = -1;
+
+function existEdge(from: number, to: number): boolean {
+    return from in adjList && to in adjList[from];
+}
+
+function drawArrow(from: Point, to: Point, lineWidth: number, arrowHeadSize: number) {
+}
 
 let edgeColor: string = "rgb(30, 30, 30)";
 let vertexColorClicked: string = "rgb(70, 70, 255)";
@@ -104,7 +111,7 @@ function render(): void {
     ctx.fillStyle = edgeColor;
     for (let i = 0; i < numVertex; i++) {
         for (let j = 0; j < numVertex; j++) {
-            if (edge[i][j] == 0) continue;
+            if (!existEdge(i, j)) continue;
             let vec = Vec.sub(vs[j].p, vs[i].p);
             let len = Vec.abs(vec) - vertexRadius;
             vec = Vec.setLength(vec, len);
@@ -210,26 +217,19 @@ function updateUI(): void {
     // textareaの更新
     let valueAL = "";
     for (let i = 0; i < numVertex; i++) {
-        let fromJ = edgeDirection == EdgeDirection.directed ? 0 : i;
+        let fromJ = (edgeDirection == EdgeDirection.directed) ? 0 : i;
         for (let j = fromJ; j < numVertex; j++) {
-            if (edge[i][j] == 1) {
-                valueAL += i.toString() + " " + j.toString() + "\n";
+            if (existEdge(i, j)) {
+                valueAL += i.toString() + " " + j.toString();
+                let cost = adjList[i][j].cost;
+                if (cost != null) {
+                    valueAL += " " + cost.toString();
+                }
+                valueAL += "\n";
             }
         }
     }
     inputAdjList.value = valueAL;
-
-    let valueAM = "";
-    for (let i = 0; i < numVertex; i++) {
-        let row = "";
-        for (let j = 0; j < numVertex; j++) {
-            row += edge[i][j].toString();
-            if (j != numVertex - 1) row += " ";
-            else row += "\n";
-        }
-        valueAM += row;
-    }
-    inputAdjMat.value = valueAM;
 }
 
 let sumEnergy = 0;
@@ -269,7 +269,7 @@ function update(): void {
             // フックの法則
             for (let j = 0; j < numVertex; j++) {
                 if (i == j) continue;
-                if (edge[i][j] == 0 && edge[j][i] == 0) continue;
+                if (!existEdge(i, j) && !existEdge(j, i)) continue;
                 const v2 = vs[j];
                 let vec = Vec.sub(v2.p, v1.p);
 
@@ -346,14 +346,6 @@ function getRadioButtonIndexing() {
 function getRadioButtonEdgeDirection() {
     if (radioUndirected.checked) {
         edgeDirection = EdgeDirection.undirected;
-        // 対称にする
-        for (let i = 0; i < numVertex; i++) {
-            for (let j = 0; j < numVertex; j++) {
-                if (edge[i][j] == 1) {
-                    edge[j][i] = edge[i][j];
-                }
-            }
-        }
     } else if (radioDirected.checked) {
         edgeDirection = EdgeDirection.directed;
     }
@@ -384,70 +376,31 @@ checkboxGravity.addEventListener("input", getCheckboxGravity, false);
 function getTextareaAdjList(): void {
     let mxID = -1;
     let lines = inputAdjList.value.split(/\r\n|\r|\n/);
-    let tmp: Array<[number, number]> = [];
+    adjList = {};
     for (let i = 0; i < lines.length; i++) {
         if (lines[i] === "") continue;
         let e = lines[i].split(/\s*,\s*|\s+/);
         if (e.length < 2 || e[1] === "") continue;
-        let a = parseInt(e[0]), b = parseInt(e[1]);
+
+        let a = parseInt(e[0]), b = parseInt(e[1]), c = null;
+        if (e.length >= 3) c = parseInt(e[2]);
+
         mxID = Math.max(mxID, a, b);
-        tmp.push([a, b]);
-    }
-    let newNumVertex: number = mxID + 1;
-    edge = [];
-    for (let i = 0; i < newNumVertex; i++) {
-        edge.push(new Array<number>(newNumVertex));
-        for (let j = 0; j < newNumVertex; j++) {
-            edge[i][j] = 0;
-        }
-    }
-
-    for (let i = numVertex; i <= newNumVertex; i++) vs.push(new Vertex());
-    numVertex = newNumVertex;
-
-    for (let i = 0; i < tmp.length; i++) {
-        let a = tmp[i][0], b = tmp[i][1];
+        if (!(a in adjList)) adjList[a] = {};
+        adjList[a][b] = new Edge(a, b, c);
         if (edgeDirection == EdgeDirection.undirected) {
-            edge[a][b] = edge[b][a] = 1;
-        } else {
-            edge[a][b] = 1;
+            if (!(a in adjList)) adjList[a] = {};
+            adjList[b][a] = new Edge(b, a, c);
         }
     }
-    update();
-}
-function getTextareaAdjMat(): void {
-    let invalid = false;
-    let lines = inputAdjMat.value.split(/\r\n|\r|\n/);
-    let cols = -1;
-    let mat: Array<Array<number>> = [];
-    for (let i = 0; i < lines.length; i++) {
-        if (lines[i] === "") continue;
-        let row = lines[i].split(/\s*,\s*|\s+/).map(x => parseInt(x));
-        mat.push(row);
-        if (cols == -1) cols = row.length;
-        else if (cols != row.length) {
-            invalid = true;
-        }
+    let newNumVertex = mxID + 1;
+    for (let i = numVertex; i <= newNumVertex; i++) {
+        vs.push(new Vertex());
     }
-    if (!invalid) {
-        let newNumVertex = cols;
-        for (let i = numVertex; i <= newNumVertex; i++) vs.push(new Vertex());
-        edge = mat;
-        numVertex = cols;
-    }
-
-    // 対称になっていない場合、有向グラフに変更
-    for (let i = 0; i < numVertex; i++) {
-        for (let j = 0; j < numVertex; j++) {
-            if (edge[i][j] != edge[j][i]) {
-                edgeDirection = EdgeDirection.directed;
-            }
-        }
-    }
+    numVertex = newNumVertex;
     update();
 }
 inputAdjList.addEventListener("change", getTextareaAdjList, false);
-inputAdjMat.addEventListener("change", getTextareaAdjMat, false);
 
 demoInit();
 update();
