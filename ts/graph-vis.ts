@@ -57,11 +57,11 @@ enum VertexState {
 }
 
 class Vertex {
-    id: number;
+    id: string;
     p: Point;
     v: Vec;
     state: VertexState;
-    constructor(id: number) {
+    constructor(id: string) {
         this.id = id;
         this.p = new Vec(Math.random() * 1000, Math.random() * 1000);
         this.v = new Vec(0, 0);
@@ -70,40 +70,44 @@ class Vertex {
 }
 
 class VertexSet {
-    vs: { [index: number]: Vertex };
-    keys: Array<number>;
+    vs: { [index: string]: Vertex };
+    keys: Array<string>;
     constructor() {
         this.vs = {};
         this.keys = [];
     }
 
-    public add(id: number): void {
+    public add(id: string): void {
         this.vs[id] = new Vertex(id);
         this.updatekeys();
     }
-    public checkExist(id: number): boolean {
+    public remove(id: string): void {
+        delete this.vs[id];
+        this.updatekeys();
+    }
+    public checkExist(id: string): boolean {
         return id in this.vs;
     }
     public getNumVertex(): number {
         return Object.keys(vs).length;
     }
-    public getKeys(): Array<number> {
+    public getKeys(): Array<string> {
         return this.keys;
     }
-    public at(id: number): Vertex {
+    public at(id: string): Vertex {
         return this.vs[id];
     }
 
     private updatekeys(): void {
-        this.keys = Object.keys(this.vs).map(function (x: string) { return parseInt(x); });
+        this.keys = Object.keys(this.vs);
     }
 }
 
 class Edge<Cost> {
-    constructor(public from: number, public to: number, public cost: Cost) { }
+    constructor(public from: string, public to: string, public cost: Cost) { }
 }
 interface AdjacencyList<Cost> {
-    [index: number]: { [index: number]: Edge<Cost> };
+    [index: string]: { [index: string]: Edge<Cost> };
 }
 
 
@@ -116,9 +120,9 @@ let enableGravity = false;
 const vs = new VertexSet();
 
 let adjList: AdjacencyList<string | null> = {};
-let clicked: number = -1;
+let clicked: string = "";
 
-function existEdge(from: number, to: number): boolean {
+function existEdge(from: string, to: string): boolean {
     return from in adjList && to in adjList[from];
 }
 
@@ -221,12 +225,12 @@ function render(): void {
 }
 
 function demoInit(): void {
-    adjList[0] = { 1: new Edge(0, 1, null) };
-    vs.add(0);
-    vs.add(1);
+    adjList["0"] = { 1: new Edge("0", "1", null) };
+    vs.add("0");
+    vs.add("1");
 
-    vs.at(0).p = new Vec(500, 500);
-    vs.at(0).state = VertexState.fixed;
+    vs.at("0").p = new Vec(300, 300);
+    vs.at("0").state = VertexState.fixed;
 }
 
 function updateUI(): void {
@@ -366,6 +370,7 @@ function update(): void {
         render();
         // console.log("sumEnergy: ", sumEnergy);
 
+        sumEnergy /= vs.getNumVertex();
         if (sumEnergy > energyLowerbound) {
             window.requestAnimationFrame(moveVertices);
         } else {
@@ -389,16 +394,16 @@ function onMouseDown(e: MouseEvent): void {
     update();
 }
 function onMouseUp(e: MouseEvent): void {
-    if (clicked == -1) return;
+    if (clicked == "") return;
     if (e.button == 2) {  // 右クリック
         vs.at(clicked).state ^= VertexState.fixed;  // 固定状態を反転
     }
     vs.at(clicked).state &= ~VertexState.moving;
-    clicked = -1;
+    clicked = "";
     update();
 }
 function onMouseMove(e: MouseEvent): void {
-    if (clicked == -1) return;
+    if (clicked == "") return;
     vs.at(clicked).p = { x: e.offsetX, y: e.offsetY };
     update();
 }
@@ -448,21 +453,30 @@ function getCheckboxGravity() {
 checkboxGravity.addEventListener("input", getCheckboxGravity, false);
 
 function getTextareaAdjList(): void {
-    let mxID = -1;
     let lines = inputAdjList.value.split(/\r\n|\r|\n/);
     adjList = {};
+
+    let vsAlive: { [index: string]: boolean } = {};
+    for (let k of vs.getKeys()) {
+        vsAlive[k] = false;
+    }
+
     for (let i = 0; i < lines.length; i++) {
         if (lines[i] === "") continue;
         let e = lines[i].split(/\s*,\s*|\s+/);
+        if (e[0] === "") continue;
+
+        let a = e[0];
+        vsAlive[a] = true;
+        if (!vs.checkExist(a)) vs.add(a);
+
         if (e.length < 2 || e[1] === "") continue;
 
-        let a = parseInt(e[0]), b = parseInt(e[1]), c = null;
-        if (e.length >= 3) c = e[2];
-
-        mxID = Math.max(mxID, a, b);
-
-        if (!vs.checkExist(a)) vs.add(a);
+        let b = e[1];
+        vsAlive[b] = true;
         if (!vs.checkExist(b)) vs.add(b);
+
+        let c = (e.length >= 3 ? e[2] : null);
 
         if (!(a in adjList)) adjList[a] = {};
         adjList[a][b] = new Edge(a, b, c);
@@ -471,6 +485,12 @@ function getTextareaAdjList(): void {
             adjList[b][a] = new Edge(b, a, c);
         }
     }
+
+    // 消えた頂点を反映
+    for (let k of Object.keys(vsAlive)) {
+        if (!vsAlive[k]) vs.remove(k);
+    }
+
     update();
 }
 inputAdjList.addEventListener("change", getTextareaAdjList, false);
