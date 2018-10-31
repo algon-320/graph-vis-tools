@@ -57,24 +57,47 @@ enum VertexState {
 }
 
 class Vertex {
+    id: number;
     p: Point;
     v: Vec;
     state: VertexState;
-    constructor() {
+    constructor(id: number) {
+        this.id = id;
         this.p = new Vec(Math.random() * 1000, Math.random() * 1000);
         this.v = new Vec(0, 0);
         this.state = VertexState.floating;
     }
 }
 
-let vertexIndexing = VertexIndexing.zero;
-let edgeDirection = EdgeDirection.directed;
-let vertexRadius = 20;
-let edgeLength = 100;
-let enableGravity = false;
+class VertexSet {
+    vs: { [index: number]: Vertex };
+    keys: Array<number>;
+    constructor() {
+        this.vs = {};
+        this.keys = [];
+    }
 
-let numVertex = 2;
-let vs: Array<Vertex> = [];
+    public add(id: number): void {
+        this.vs[id] = new Vertex(id);
+        this.updatekeys();
+    }
+    public checkExist(id: number): boolean {
+        return id in this.vs;
+    }
+    public getNumVertex(): number {
+        return Object.keys(vs).length;
+    }
+    public getKeys(): Array<number> {
+        return this.keys;
+    }
+    public at(id: number): Vertex {
+        return this.vs[id];
+    }
+
+    private updatekeys(): void {
+        this.keys = Object.keys(this.vs).map(function (x: string) { return parseInt(x); });
+    }
+}
 
 class Edge<Cost> {
     constructor(public from: number, public to: number, public cost: Cost) { }
@@ -82,8 +105,17 @@ class Edge<Cost> {
 interface AdjacencyList<Cost> {
     [index: number]: { [index: number]: Edge<Cost> };
 }
+
+
+let vertexIndexing = VertexIndexing.zero;
+let edgeDirection = EdgeDirection.directed;
+let vertexRadius = 20;
+let edgeLength = 100;
+let enableGravity = false;
+
+const vs = new VertexSet();
+
 let adjList: AdjacencyList<string | null> = {};
-adjList[0] = { 1: new Edge(0, 1, null) };
 let clicked: number = -1;
 
 function existEdge(from: number, to: number): boolean {
@@ -99,22 +131,21 @@ let vertexColorNormal: string = "rgb(255, 70, 70)";
 let fontColor: string = "white";
 let backgroundColor: string = "white";
 function render(): void {
-    ctx.fillStyle = backgroundColor;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     const arrowSize = 10;
     const edgeWidth = 4;
     // 辺
     ctx.strokeStyle = edgeColor;
     ctx.fillStyle = edgeColor;
-    for (let i = 0; i < numVertex; i++) {
-        for (let j = 0; j < numVertex; j++) {
+    for (const i of vs.getKeys()) {
+        for (const j of vs.getKeys()) {
             if (!existEdge(i, j)) continue;
-            let vec = Vec.sub(vs[j].p, vs[i].p);
+            let vec = Vec.sub(vs.at(j).p, vs.at(i).p);
 
             let cost = adjList[i][j].cost;
             if (cost != null) {  // コストを描画
-                let center = Vec.add(vs[i].p, Vec.scalar(vec, 0.5));
+                let center = Vec.add(vs.at(i).p, Vec.scalar(vec, 0.5));
                 let out = Vec.rotate(Vec.scalar(vec, 0.5), -Math.PI / 2);
                 let p = Vec.add(center, Vec.setLength(out, 15));
                 ctx.fillText(cost.toString(), p.x, p.y + 5);
@@ -122,7 +153,7 @@ function render(): void {
 
             let len = Vec.abs(vec) - vertexRadius;
             vec = Vec.setLength(vec, len);
-            let pi = vs[i].p;
+            let pi = vs.at(i).p;
             let arrowP = new Array<Vec>();
 
             vec = Vec.rotate(vec, Math.PI * 3 / 2);
@@ -170,31 +201,32 @@ function render(): void {
 
     // 頂点
     ctx.lineWidth = 3;
-    for (let i = 0; i < numVertex; i++) {
+    for (const i of vs.getKeys()) {
         if (i == clicked) {
             ctx.fillStyle = vertexColorClicked;
         } else {
             ctx.fillStyle = vertexColorNormal;
         }
         ctx.beginPath();
-        ctx.arc(vs[i].p.x, vs[i].p.y, vertexRadius, 0, 2 * 3.14, false);
+        ctx.arc(vs.at(i).p.x, vs.at(i).p.y, vertexRadius, 0, 2 * 3.14, false);
         ctx.closePath();
         ctx.fill();
-        if ((vs[i].state & VertexState.stuck) > 0) {
+        if ((vs.at(i).state & VertexState.stuck) > 0) {
             ctx.stroke();
         }
 
         ctx.fillStyle = fontColor;
-        ctx.fillText(i.toString(), vs[i].p.x, vs[i].p.y + 5);
+        ctx.fillText(i.toString(), vs.at(i).p.x, vs.at(i).p.y + 5);
     }
 }
 
 function demoInit(): void {
-    for (let i = 0; i < numVertex; i++) {
-        vs.push(new Vertex());
-    }
-    vs[0].p = new Vec(500, 500);
-    vs[0].state = VertexState.fixed;
+    adjList[0] = { 1: new Edge(0, 1, null) };
+    vs.add(0);
+    vs.add(1);
+
+    vs.at(0).p = new Vec(500, 500);
+    vs.at(0).state = VertexState.fixed;
 }
 
 function updateUI(): void {
@@ -223,12 +255,29 @@ function updateUI(): void {
 
     // textareaの更新
     let valueAL = "";
-    for (let i = 0; i < numVertex; i++) {
-        let fromJ = (edgeDirection == EdgeDirection.directed) ? 0 : i;
-        for (let j = fromJ; j < numVertex; j++) {
-            if (existEdge(i, j)) {
+    for (const i of vs.getKeys()) {
+        for (const j of vs.getKeys()) {
+            let print_edge = false;
+            let cost = null;
+            if (edgeDirection == EdgeDirection.directed) {
+                if (existEdge(i, j)) {
+                    print_edge = true;
+                    cost = adjList[i][j].cost;
+                }
+            } else {
+                if (j < i) continue;
+                if (existEdge(i, j)) {
+                    print_edge = true;
+                    cost = adjList[i][j].cost;
+                }
+                if (existEdge(j, i)) {
+                    print_edge = true;
+                    cost = adjList[j][i].cost;
+                }
+            }
+
+            if (print_edge) {
                 valueAL += i.toString() + " " + j.toString();
-                let cost = adjList[i][j].cost;
                 if (cost != null) {
                     valueAL += " " + cost.toString();
                 }
@@ -244,25 +293,25 @@ function update(): void {
     updateUI();  // UIパーツを更新
 
     // 定数 ------------------------
-    const coulombK = 1000;
+    const coulombK = 1500;
     const springK = 1.2;
-    const energyLowerbound = 0.1;
-    const deltaT = 0.25;
-    const M = 2;
-    const decK = 0.7;
-    const G = 50;
+    const energyLowerbound = 1;
+    const deltaT = 0.2;
+    const M = 1;
+    const decK = 0.6;
+    const G = 100;
     // -----------------------------
     function moveVertices(timestamp: DOMHighResTimeStamp): void {
         sumEnergy = 0;
-        for (let i = 0; i < numVertex; i++) {
-            const v1 = vs[i];
+        for (const i of vs.getKeys()) {
+            const v1 = vs.at(i);
 
             let F = new Vec(0, 0);
 
             // 頂点からのクーロン力
-            for (let j = 0; j < numVertex; j++) {
+            for (const j of vs.getKeys()) {
                 if (i == j) continue;
-                const v2 = vs[j];
+                const v2 = vs.at(j);
 
                 let vec = Vec.sub(v1.p, v2.p);
                 let absf = coulombK / Vec.abs(vec);
@@ -278,24 +327,24 @@ function update(): void {
                 const K = coulombK;
                 let sum = new Vec(0, 0);
                 let f = new Vec(0, K / Math.max(v1.p.y - 0, 1));
-                sum = Vec.add(sum, f);
+                if (Vec.abs(f) > 10) sum = Vec.add(sum, f);
 
                 f = new Vec(0, -(K / Math.max(canvas.height - v1.p.y, 1)));
-                sum = Vec.add(sum, f);
+                if (Vec.abs(f) > 10) sum = Vec.add(sum, f);
 
                 f = new Vec(K / Math.max(v1.p.x - 0, 1), 0);
-                sum = Vec.add(sum, f);
+                if (Vec.abs(f) > 10) sum = Vec.add(sum, f);
 
                 f = new Vec(-(K / Math.max(canvas.width - v1.p.x, 1)), 0);
-                sum = Vec.add(sum, f);
+                if (Vec.abs(f) > 10) sum = Vec.add(sum, f);
                 F = Vec.add(F, sum);
             }
 
             // フックの法則
-            for (let j = 0; j < numVertex; j++) {
+            for (const j of vs.getKeys()) {
                 if (i == j) continue;
                 if (!existEdge(i, j) && !existEdge(j, i)) continue;
-                const v2 = vs[j];
+                const v2 = vs.at(j);
                 let vec = Vec.sub(v2.p, v1.p);
 
                 let absf = springK * (Vec.abs(vec) - edgeLength);
@@ -308,7 +357,7 @@ function update(): void {
                 F = Vec.add(F, new Vec(0, G * M));
             }
 
-            if ((vs[i].state & VertexState.stuck) == 0) {
+            if ((vs.at(i).state & VertexState.stuck) == 0) {
                 v1.v = Vec.scalar(Vec.add(v1.v, Vec.scalar(F, deltaT / M)), decK);
                 v1.p = Vec.add(v1.p, Vec.scalar(v1.v, deltaT));
             }
@@ -330,27 +379,27 @@ function update(): void {
 
 
 function onMouseDown(e: MouseEvent): void {
-    for (let i = 0; i < numVertex; i++) {
-        if (Vec.abs(Vec.sub(vs[i].p, new Vec(e.offsetX, e.offsetY))) < vertexRadius) {
+    for (const i of vs.getKeys()) {
+        if (Vec.abs(Vec.sub(vs.at(i).p, new Vec(e.offsetX, e.offsetY))) < vertexRadius) {
             clicked = i;
-            vs[i].state |= VertexState.moving;
+            vs.at(i).state |= VertexState.moving;
             break;
         }
     }
-    render();
+    update();
 }
 function onMouseUp(e: MouseEvent): void {
     if (clicked == -1) return;
     if (e.button == 2) {  // 右クリック
-        vs[clicked].state ^= VertexState.fixed;  // 固定状態を反転
+        vs.at(clicked).state ^= VertexState.fixed;  // 固定状態を反転
     }
-    vs[clicked].state &= ~VertexState.moving;
+    vs.at(clicked).state &= ~VertexState.moving;
     clicked = -1;
-    render();
+    update();
 }
 function onMouseMove(e: MouseEvent): void {
     if (clicked == -1) return;
-    vs[clicked].p = { x: e.offsetX, y: e.offsetY };
+    vs.at(clicked).p = { x: e.offsetX, y: e.offsetY };
     update();
 }
 canvas.addEventListener("mousedown", onMouseDown, false);
@@ -411,6 +460,10 @@ function getTextareaAdjList(): void {
         if (e.length >= 3) c = e[2];
 
         mxID = Math.max(mxID, a, b);
+
+        if (!vs.checkExist(a)) vs.add(a);
+        if (!vs.checkExist(b)) vs.add(b);
+
         if (!(a in adjList)) adjList[a] = {};
         adjList[a][b] = new Edge(a, b, c);
         if (edgeDirection == EdgeDirection.undirected) {
@@ -418,16 +471,12 @@ function getTextareaAdjList(): void {
             adjList[b][a] = new Edge(b, a, c);
         }
     }
-    let newNumVertex = mxID + 1;
-    for (let i = numVertex; i <= newNumVertex; i++) {
-        vs.push(new Vertex());
-    }
-    numVertex = newNumVertex;
     update();
 }
 inputAdjList.addEventListener("change", getTextareaAdjList, false);
 
 demoInit();
+
 function setCanvasSize() {
     canvas.width = canvas.clientWidth;
     canvas.height = canvas.clientHeight;
