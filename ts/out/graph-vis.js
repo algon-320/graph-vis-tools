@@ -201,9 +201,6 @@ var Graph = (function () {
     };
     Graph.energyLowerbound = 1;
     Graph.edgeColor = "rgb(30, 30, 30)";
-    Graph.vertexColorClicked = "rgb(70, 70, 255)";
-    Graph.vertexColorNormal = "rgb(255, 70, 70)";
-    Graph.fontColor = "white";
     Graph.backgroundColor = "white";
     Graph.arrowSize = 10;
     Graph.edgeWidth = 4;
@@ -255,11 +252,11 @@ var Vertex = (function () {
     }
     Vertex.prototype.draw = function (ctx) {
         ctx.lineWidth = 3;
-        if (this.state == VertexState.moving) {
-            ctx.fillStyle = Graph.vertexColorClicked;
+        if (this.state & VertexState.moving) {
+            ctx.fillStyle = Vertex.vertexColorClicked;
         }
         else {
-            ctx.fillStyle = Graph.vertexColorNormal;
+            ctx.fillStyle = Vertex.vertexColorNormal;
         }
         var r = this.radius;
         ctx.beginPath();
@@ -269,12 +266,15 @@ var Vertex = (function () {
         if ((this.state & VertexState.stuck) > 0) {
             ctx.stroke();
         }
-        ctx.fillStyle = Graph.fontColor;
+        ctx.fillStyle = Vertex.fontColor;
         ctx.fillText(this.id.toString(), this.p.x, this.p.y + 5);
     };
     Vertex.prototype.isInnerPoint = function (point) {
         return (Vec.abs(Vec.sub(this.p, point)) < this.radius);
     };
+    Vertex.vertexColorClicked = "rgb(70, 70, 255)";
+    Vertex.vertexColorNormal = "rgb(255, 70, 70)";
+    Vertex.fontColor = "white";
     return Vertex;
 }());
 var VertexSet = (function () {

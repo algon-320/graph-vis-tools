@@ -83,9 +83,6 @@ class Graph implements IDrawable {
     }
 
     static edgeColor = "rgb(30, 30, 30)";
-    static vertexColorClicked = "rgb(70, 70, 255)";
-    static vertexColorNormal = "rgb(255, 70, 70)";
-    static fontColor = "white";
     static backgroundColor = "white";
     static arrowSize = 10;
     static edgeWidth = 4;

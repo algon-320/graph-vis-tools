@@ -21,12 +21,15 @@ class Vertex implements IDrawable, IMouseDraggable {
         this.radius = radius;
     }
 
+    static vertexColorClicked = "rgb(70, 70, 255)";
+    static vertexColorNormal = "rgb(255, 70, 70)";
+    static fontColor = "white";
     public draw(ctx: CanvasRenderingContext2D): void {
         ctx.lineWidth = 3;
-        if (this.state == VertexState.moving) {
-            ctx.fillStyle = Graph.vertexColorClicked;
+        if (this.state & VertexState.moving) {
+            ctx.fillStyle = Vertex.vertexColorClicked;
         } else {
-            ctx.fillStyle = Graph.vertexColorNormal;
+            ctx.fillStyle = Vertex.vertexColorNormal;
         }
 
         const r = this.radius;
@@ -46,7 +49,7 @@ class Vertex implements IDrawable, IMouseDraggable {
             ctx.stroke();
         }
 
-        ctx.fillStyle = Graph.fontColor;
+        ctx.fillStyle = Vertex.fontColor;
         ctx.fillText(this.id.toString(), this.p.x, this.p.y + 5);
     }
 
