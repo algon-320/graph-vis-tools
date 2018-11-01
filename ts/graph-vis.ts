@@ -5,16 +5,10 @@ const ctx = <CanvasRenderingContext2D>canvas.getContext("2d");
 const inputAdjList = <HTMLTextAreaElement>document.getElementById("inputAdjList");
 const inputVertexRadius = <HTMLInputElement>document.getElementById("inputVertexRadius");
 const inputEdgeLength = <HTMLInputElement>document.getElementById("inputEdgeLength");
-const radioZeroIndexed = <HTMLInputElement>document.getElementById("radioZeroIndexed");
-const radioOneIndexed = <HTMLInputElement>document.getElementById("radioOneIndexed");
 const radioUndirected = <HTMLInputElement>document.getElementById("radioUndirected");
 const radioDirected = <HTMLInputElement>document.getElementById("radioDirected");
 const checkboxGravity = <HTMLInputElement>document.getElementById("checkboxGravity");
 
-enum VertexIndexing {
-    zero,
-    one,
-}
 enum EdgeDirection {
     undirected,
     directed,
@@ -110,8 +104,6 @@ interface AdjacencyList<Cost> {
     [index: string]: { [index: string]: Edge<Cost> };
 }
 
-
-let vertexIndexing = VertexIndexing.zero;
 let edgeDirection = EdgeDirection.directed;
 let vertexRadius = 20;
 let edgeLength = 100;
@@ -234,15 +226,6 @@ function demoInit(): void {
 }
 
 function updateUI(): void {
-    switch (vertexIndexing) {
-        case VertexIndexing.zero:
-            radioZeroIndexed.checked = true;
-            break;
-        case VertexIndexing.one:
-            radioOneIndexed.checked = true;
-            break;
-    }
-
     switch (edgeDirection) {
         case EdgeDirection.undirected:
             radioUndirected.checked = true;
@@ -413,15 +396,6 @@ canvas.addEventListener("mousemove", onMouseMove, false);
 // 右クリックのコンテキストメニュー表示を無効化
 canvas.addEventListener("contextmenu", function (e: MouseEvent): void { e.preventDefault(); });
 
-
-function getRadioButtonIndexing() {
-    if (radioZeroIndexed.checked) {
-        vertexIndexing = VertexIndexing.zero;
-    } else if (radioOneIndexed.checked) {
-        vertexIndexing = VertexIndexing.one;
-    }
-    update();
-}
 function getRadioButtonEdgeDirection() {
     if (radioUndirected.checked) {
         edgeDirection = EdgeDirection.undirected;
@@ -430,8 +404,6 @@ function getRadioButtonEdgeDirection() {
     }
     update();
 }
-radioZeroIndexed.addEventListener("change", getRadioButtonIndexing, false);
-radioOneIndexed.addEventListener("change", getRadioButtonIndexing, false);
 radioUndirected.addEventListener("change", getRadioButtonEdgeDirection, false);
 radioDirected.addEventListener("change", getRadioButtonEdgeDirection, false);
 
