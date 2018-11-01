@@ -183,7 +183,7 @@ var Graph = (function () {
                     continue;
                 var v2 = graph.vs.at(j);
                 var vec = Vec.sub(v2.p, v1.p);
-                var absf = springK * (Vec.abs(vec) - edgeLength);
+                var absf = springK * (Vec.abs(vec) - distance);
                 var f = vec;
                 f = Vec.scalar(f, absf / Vec.abs(f));
                 F = Vec.add(F, f);

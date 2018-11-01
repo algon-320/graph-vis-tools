@@ -216,7 +216,7 @@ class Graph implements IDrawable {
                 const v2 = graph.vs.at(j);
                 let vec = Vec.sub(v2.p, v1.p);
 
-                let absf = springK * (Vec.abs(vec) - edgeLength);
+                let absf = springK * (Vec.abs(vec) - distance);
                 let f = vec;
                 f = Vec.scalar(f, absf / Vec.abs(f));  // 長さを設定
                 F = Vec.add(F, f);
