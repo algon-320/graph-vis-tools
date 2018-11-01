@@ -22,24 +22,25 @@ class Vertex implements IDrawable, IMouseDraggable {
     }
 
     public draw(ctx: CanvasRenderingContext2D): void {
-        if (this.id == clicked) {
+        ctx.lineWidth = 3;
+        if (this.state == VertexState.moving) {
             ctx.fillStyle = Graph.vertexColorClicked;
         } else {
             ctx.fillStyle = Graph.vertexColorNormal;
         }
 
         const r = this.radius;
-        ctx.beginPath();
-        ctx.moveTo(this.p.x - r, this.p.y - r);
-        ctx.lineTo(this.p.x + r, this.p.y - r);
-        ctx.lineTo(this.p.x + r, this.p.y + r);
-        ctx.lineTo(this.p.x - r, this.p.y + r);
-        ctx.closePath();
-        ctx.fill();
         // ctx.beginPath();
-        // ctx.arc(this.vs.at(i).p.x, this.vs.at(i).p.y, vertexRadius, 0, 2 * 3.14, false);
+        // ctx.moveTo(this.p.x - r, this.p.y - r);
+        // ctx.lineTo(this.p.x + r, this.p.y - r);
+        // ctx.lineTo(this.p.x + r, this.p.y + r);
+        // ctx.lineTo(this.p.x - r, this.p.y + r);
         // ctx.closePath();
         // ctx.fill();
+        ctx.beginPath();
+        ctx.arc(this.p.x, this.p.y, r, 0, 2 * 3.14, false);
+        ctx.closePath();
+        ctx.fill();
 
         if ((this.state & VertexState.stuck) > 0) {
             ctx.stroke();
@@ -51,10 +52,10 @@ class Vertex implements IDrawable, IMouseDraggable {
 
     public isInnerPoint(point: Point): boolean {
         // TODO: shape
-        if (true || this.id == "0") {
-            return (this.p.x - this.radius <= point.x && point.x <= this.p.x + this.radius &&
-                this.p.y - this.radius <= point.y && point.y <= this.p.y + this.radius);
-        }
+        // if (true || this.id == "0") {
+        //     return (this.p.x - this.radius <= point.x && point.x <= this.p.x + this.radius &&
+        //         this.p.y - this.radius <= point.y && point.y <= this.p.y + this.radius);
+        // }
         return (Vec.abs(Vec.sub(this.p, point)) < this.radius);
     }
 }

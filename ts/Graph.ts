@@ -156,7 +156,6 @@ class Graph implements IDrawable {
         }
 
         // 頂点
-        ctx.lineWidth = 3;
         for (const i of this.vs.getKeys()) {
             this.vs.at(i).draw(ctx);
         }

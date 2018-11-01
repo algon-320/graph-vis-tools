@@ -128,7 +128,6 @@ var Graph = (function () {
                 ctx.fill();
             }
         }
-        ctx.lineWidth = 3;
         for (var _d = 0, _e = this.vs.getKeys(); _d < _e.length; _d++) {
             var i = _e[_d];
             this.vs.at(i).draw(ctx);
@@ -255,7 +254,8 @@ var Vertex = (function () {
         this.radius = radius;
     }
     Vertex.prototype.draw = function (ctx) {
-        if (this.id == clicked) {
+        ctx.lineWidth = 3;
+        if (this.state == VertexState.moving) {
             ctx.fillStyle = Graph.vertexColorClicked;
         }
         else {
@@ -263,10 +263,7 @@ var Vertex = (function () {
         }
         var r = this.radius;
         ctx.beginPath();
-        ctx.moveTo(this.p.x - r, this.p.y - r);
-        ctx.lineTo(this.p.x + r, this.p.y - r);
-        ctx.lineTo(this.p.x + r, this.p.y + r);
-        ctx.lineTo(this.p.x - r, this.p.y + r);
+        ctx.arc(this.p.x, this.p.y, r, 0, 2 * 3.14, false);
         ctx.closePath();
         ctx.fill();
         if ((this.state & VertexState.stuck) > 0) {
@@ -276,10 +273,6 @@ var Vertex = (function () {
         ctx.fillText(this.id.toString(), this.p.x, this.p.y + 5);
     };
     Vertex.prototype.isInnerPoint = function (point) {
-        if (true || this.id == "0") {
-            return (this.p.x - this.radius <= point.x && point.x <= this.p.x + this.radius &&
-                this.p.y - this.radius <= point.y && point.y <= this.p.y + this.radius);
-        }
         return (Vec.abs(Vec.sub(this.p, point)) < this.radius);
     };
     return Vertex;
@@ -340,12 +333,18 @@ function render() {
     graph.draw(context);
 }
 function demoInit() {
-    graph.addEdge(new Edge("0", "1", null));
-    var v = new Vertex("0");
+    graph.addEdge(new Edge("1", "2", null));
+    graph.addEdge(new Edge("1", "5", null));
+    graph.addEdge(new Edge("2", "3", null));
+    graph.addEdge(new Edge("2", "5", null));
+    graph.addEdge(new Edge("3", "4", null));
+    graph.addEdge(new Edge("4", "5", null));
+    graph.addEdge(new Edge("4", "6", null));
+    var v = new Vertex("1");
     v.p = new Vec(300, 300);
     v.state = VertexState.fixed;
-    v.radius = 40;
-    graph.vs.set("0", v);
+    v.radius = vertexRadius;
+    graph.vs.set("1", v);
 }
 function updateUI() {
     switch (graph.edgeDirection) {

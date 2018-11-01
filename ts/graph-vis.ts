@@ -28,14 +28,20 @@ function render(): void {
 }
 
 function demoInit(): void {
-    graph.addEdge(new Edge("0", "1", null));
+    graph.addEdge(new Edge("1", "2", null));
+    graph.addEdge(new Edge("1", "5", null));
+    graph.addEdge(new Edge("2", "3", null));
+    graph.addEdge(new Edge("2", "5", null));
+    graph.addEdge(new Edge("3", "4", null));
+    graph.addEdge(new Edge("4", "5", null));
+    graph.addEdge(new Edge("4", "6", null));
 
-    const v = new Vertex("0");
+
+    const v = new Vertex("1");
     v.p = new Vec(300, 300);
     v.state = VertexState.fixed;
-    v.radius = 40;
-
-    graph.vs.set("0", v);
+    v.radius = vertexRadius;
+    graph.vs.set("1", v);
 }
 
 function updateUI(): void {
